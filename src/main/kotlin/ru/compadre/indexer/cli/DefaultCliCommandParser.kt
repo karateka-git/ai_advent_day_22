@@ -1,5 +1,6 @@
 package ru.compadre.indexer.cli
 
+import ru.compadre.indexer.model.ChunkingStrategy
 import ru.compadre.indexer.workflow.command.CompareCommand
 import ru.compadre.indexer.workflow.command.HelpCommand
 import ru.compadre.indexer.workflow.command.IndexCommand
@@ -28,7 +29,12 @@ class DefaultCliCommandParser : CliCommandParser {
 
     private fun parseIndexCommand(args: Array<String>): WorkflowCommand {
         val input = findOption(args, "--input")
-        val strategy = findOption(args, "--strategy")
+        val strategy = findOption(args, "--strategy")?.let { rawValue ->
+            ChunkingStrategy.fromCli(rawValue)
+                ?: throw IllegalArgumentException(
+                    "Для `--strategy` поддерживаются только значения `fixed` и `structured`.",
+                )
+        }
         val allStrategies = args.any { it.equals("--all-strategies", ignoreCase = true) }
 
         if (strategy != null && allStrategies) {
@@ -58,4 +64,3 @@ class DefaultCliCommandParser : CliCommandParser {
             ?: throw IllegalArgumentException("Для опции `$optionName` требуется значение.")
     }
 }
-

@@ -29,7 +29,7 @@ class DefaultWorkflowCommandHandler(
 
         is IndexCommand -> {
             val inputDir = command.inputDir ?: config.app.inputDir
-            val strategyLabel = command.strategy ?: if (command.allStrategies) "all" else "<не указана>"
+            val strategyLabel = command.strategy?.id ?: if (command.allStrategies) "all" else "<не указана>"
             DocumentLoadResult(
                 commandName = "index",
                 inputDir = inputDir,

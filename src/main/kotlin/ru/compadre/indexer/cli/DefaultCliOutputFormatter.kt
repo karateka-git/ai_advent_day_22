@@ -49,14 +49,14 @@ class DefaultCliOutputFormatter : CliOutputFormatter {
             add("Первые документы:")
             result.documents.take(10).forEach { document ->
                 add("  - [${document.sourceType}] ${document.fileName} -> ${document.filePath}")
-                add("    textLength = ${document.text?.length ?: 0}")
+                add("    textLength = ${document.text.length}")
                 add("    preview = ${previewText(document.text)}")
             }
         }
     }.joinToString(separator = System.lineSeparator())
 
-    private fun previewText(text: String?): String {
-        if (text.isNullOrBlank()) {
+    private fun previewText(text: String): String {
+        if (text.isBlank()) {
             return "<пусто>"
         }
 

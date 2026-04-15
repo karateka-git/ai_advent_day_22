@@ -6,6 +6,7 @@ import ru.compadre.indexer.extractor.TextExtractorRegistry
 import ru.compadre.indexer.extractor.TextNormalizer
 import ru.compadre.indexer.model.RawDocument
 import java.nio.file.Path
+import java.util.logging.Logger
 import kotlin.io.path.extension
 import kotlin.io.path.invariantSeparatorsPathString
 import kotlin.io.path.name
@@ -26,14 +27,23 @@ class DocumentLoader(
     fun load(inputDir: Path): List<RawDocument> {
         InputDirectoryValidator.validate(inputDir)
 
-        return fileScanner.scan(inputDir).map { file ->
+        return fileScanner.scan(inputDir).mapNotNull { file ->
             toRawDocument(file)
         }
     }
 
-    private fun toRawDocument(file: Path): RawDocument {
-        val sourceType = requireNotNull(SourceTypeDetector.detect(file)) {
-            "Файл `${file.toAbsolutePath()}` не поддерживается загрузчиком."
+    /**
+     * Преобразует найденный файл в `RawDocument`.
+     *
+     * Повторно определяет `sourceType`, хотя файл уже прошёл фильтрацию в `FileScanner`,
+     * чтобы не зависеть от внешних допущений и не падать жёстко при возможном рассинхроне
+     * между сканированием и загрузкой. Если тип вдруг не определился, файл пропускается,
+     * а подробность уходит в debug-лог для отладки.
+     */
+    private fun toRawDocument(file: Path): RawDocument? {
+        val sourceType = SourceTypeDetector.detect(file) ?: run {
+            logger.fine("Пропущен неподдерживаемый файл при загрузке: ${file.toAbsolutePath()}")
+            return null
         }
         val extractor = extractorRegistry.getFor(sourceType)
         val extractedText = extractor.extract(file, sourceType)
@@ -47,5 +57,9 @@ class DocumentLoader(
             extension = file.extension.lowercase(),
             text = TextNormalizer.normalize(extractedText),
         )
+    }
+
+    private companion object {
+        private val logger: Logger = Logger.getLogger(DocumentLoader::class.java.name)
     }
 }

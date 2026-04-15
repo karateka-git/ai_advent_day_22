@@ -10,5 +10,5 @@ data class RawDocument(
     val sourceType: SourceType,
     val title: String,
     val extension: String,
-    val text: String? = null,
+    val text: String,
 )

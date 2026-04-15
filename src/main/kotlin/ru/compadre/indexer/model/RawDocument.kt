@@ -7,7 +7,7 @@ data class RawDocument(
     val documentId: String,
     val filePath: String,
     val fileName: String,
-    val sourceType: String,
+    val sourceType: SourceType,
     val title: String,
     val extension: String,
     val text: String? = null,

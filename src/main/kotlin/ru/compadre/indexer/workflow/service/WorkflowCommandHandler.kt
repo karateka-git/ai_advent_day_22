@@ -8,6 +8,5 @@ import ru.compadre.indexer.workflow.result.CommandResult
  * Выполняет внутренние команды CLI и возвращает результат для вывода.
  */
 interface WorkflowCommandHandler {
-    fun handle(command: WorkflowCommand, config: AppConfig): CommandResult
+    suspend fun handle(command: WorkflowCommand, config: AppConfig): CommandResult
 }
-

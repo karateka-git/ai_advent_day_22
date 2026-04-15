@@ -41,4 +41,15 @@ data class ChunkPreviewResult(
     val strategyLabel: String,
     val documents: List<RawDocument>,
     val chunks: List<DocumentChunk>,
+    val embeddings: List<ChunkEmbeddingPreview>,
 ) : CommandResult
+
+/**
+ * Короткий preview embedding для CLI-вывода.
+ */
+data class ChunkEmbeddingPreview(
+    val chunkId: String,
+    val model: String,
+    val vectorSize: Int,
+    val textPreview: String,
+)

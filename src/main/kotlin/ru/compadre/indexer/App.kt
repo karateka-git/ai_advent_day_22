@@ -1,12 +1,13 @@
 package ru.compadre.indexer
 
+import kotlinx.coroutines.runBlocking
 import ru.compadre.indexer.cli.CliCommandParser
 import ru.compadre.indexer.cli.CliOutputFormatter
 import ru.compadre.indexer.cli.DefaultCliCommandParser
 import ru.compadre.indexer.cli.DefaultCliOutputFormatter
+import ru.compadre.indexer.config.AppConfig
 import ru.compadre.indexer.config.AppConfigLoader
 import ru.compadre.indexer.workflow.command.HelpCommand
-import ru.compadre.indexer.workflow.command.WorkflowCommand
 import ru.compadre.indexer.workflow.service.DefaultWorkflowCommandHandler
 import ru.compadre.indexer.workflow.service.WorkflowCommandHandler
 import java.io.FileDescriptor
@@ -17,7 +18,7 @@ import java.nio.charset.StandardCharsets
 /**
  * Главная точка входа учебного индексатора документов.
  */
-fun main(args: Array<String>) {
+fun main(args: Array<String>) = runBlocking {
     configureUtf8Console()
     configureLogging()
 
@@ -33,14 +34,14 @@ fun main(args: Array<String>) {
             config = config,
             commandHandler = commandHandler,
         )
-        return
+        return@runBlocking
     }
 
     val command = try {
         parser.parse(args)
     } catch (error: IllegalArgumentException) {
         println(error.message ?: "Не удалось разобрать CLI-команду.")
-        return
+        return@runBlocking
     }
 
     println(formatter.format(commandHandler.handle(command, config)))
@@ -68,10 +69,10 @@ private fun configureUtf8Console() {
     )
 }
 
-private fun runInteractiveShell(
+private suspend fun runInteractiveShell(
     parser: CliCommandParser,
     formatter: CliOutputFormatter,
-    config: ru.compadre.indexer.config.AppConfig,
+    config: AppConfig,
     commandHandler: WorkflowCommandHandler,
 ) {
     println("Local Document Indexer")
@@ -113,11 +114,11 @@ private fun runInteractiveShell(
     }
 }
 
-private fun executeInteractiveCommand(
+private suspend fun executeInteractiveCommand(
     rawInput: String,
     parser: CliCommandParser,
     formatter: CliOutputFormatter,
-    config: ru.compadre.indexer.config.AppConfig,
+    config: AppConfig,
     commandHandler: WorkflowCommandHandler,
 ) {
     val command = try {

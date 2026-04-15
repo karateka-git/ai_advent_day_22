@@ -1,5 +1,6 @@
 package ru.compadre.indexer.cli
 
+import ru.compadre.indexer.workflow.result.ChunkEmbeddingPreview
 import ru.compadre.indexer.workflow.result.ChunkPreviewResult
 import ru.compadre.indexer.workflow.result.CommandResult
 import ru.compadre.indexer.workflow.result.DocumentLoadResult
@@ -32,7 +33,7 @@ class DefaultCliOutputFormatter : CliOutputFormatter {
         add("  chunking.fixedSize = ${result.fixedSize}")
         add("  chunking.overlap = ${result.overlap}")
         add("")
-        add("Текущий статус: fixed и structured chunking подключены к preview.")
+        add("Текущий статус: fixed и structured chunking подключены, preview embeddings активен.")
     }.joinToString(separator = System.lineSeparator())
 
     private fun chunkPreviewText(result: ChunkPreviewResult): String = buildList {
@@ -67,7 +68,23 @@ class DefaultCliOutputFormatter : CliOutputFormatter {
                 add("    preview = ${previewText(chunk.text)}")
             }
         }
+
+        if (result.embeddings.isEmpty()) {
+            add("Preview embeddings не получены.")
+        } else {
+            add("Preview embeddings:")
+            result.embeddings.forEach { embedding ->
+                addEmbeddingPreview(this, embedding)
+            }
+        }
     }.joinToString(separator = System.lineSeparator())
+
+    private fun addEmbeddingPreview(lines: MutableList<String>, embedding: ChunkEmbeddingPreview) {
+        lines.add("  - ${embedding.chunkId}")
+        lines.add("    model = ${embedding.model}")
+        lines.add("    vectorSize = ${embedding.vectorSize}")
+        lines.add("    preview = ${previewText(embedding.textPreview)}")
+    }
 
     private fun documentLoadText(result: DocumentLoadResult): String = buildList {
         add("Команда `${result.commandName}` выполнила загрузку документов.")

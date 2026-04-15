@@ -1,5 +1,9 @@
 package ru.compadre.indexer.loader
 
+import ru.compadre.indexer.extractor.PdfTextExtractor
+import ru.compadre.indexer.extractor.PlainTextExtractor
+import ru.compadre.indexer.extractor.TextExtractorRegistry
+import ru.compadre.indexer.extractor.TextNormalizer
 import ru.compadre.indexer.model.RawDocument
 import java.nio.file.Path
 import kotlin.io.path.extension
@@ -12,6 +16,12 @@ import kotlin.io.path.nameWithoutExtension
  */
 class DocumentLoader(
     private val fileScanner: FileScanner = FileScanner(),
+    private val extractorRegistry: TextExtractorRegistry = TextExtractorRegistry(
+        listOf(
+            PlainTextExtractor(),
+            PdfTextExtractor(),
+        ),
+    ),
 ) {
     fun load(inputDir: Path): List<RawDocument> {
         InputDirectoryValidator.validate(inputDir)
@@ -25,6 +35,8 @@ class DocumentLoader(
         val sourceType = requireNotNull(SourceTypeDetector.detect(file)) {
             "Файл `${file.toAbsolutePath()}` не поддерживается загрузчиком."
         }
+        val extractor = extractorRegistry.getFor(sourceType)
+        val extractedText = extractor.extract(file, sourceType)
 
         return RawDocument(
             documentId = file.toAbsolutePath().normalize().invariantSeparatorsPathString,
@@ -33,6 +45,7 @@ class DocumentLoader(
             sourceType = sourceType,
             title = file.nameWithoutExtension.ifBlank { file.name },
             extension = file.extension.lowercase(),
+            text = TextNormalizer.normalize(extractedText),
         )
     }
 }

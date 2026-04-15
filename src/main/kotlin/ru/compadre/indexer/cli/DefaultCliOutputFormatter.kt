@@ -11,8 +11,8 @@ import ru.compadre.indexer.workflow.result.HelpResult
 class DefaultCliOutputFormatter : CliOutputFormatter {
     override fun format(result: CommandResult): String = when (result) {
         is HelpResult -> helpText(result)
-        is DocumentLoadResult -> documentLoadText(result)
         is ChunkPreviewResult -> chunkPreviewText(result)
+        is DocumentLoadResult -> documentLoadText(result)
     }
 
     private fun helpText(result: HelpResult): String = buildList {
@@ -32,29 +32,7 @@ class DefaultCliOutputFormatter : CliOutputFormatter {
         add("  chunking.fixedSize = ${result.fixedSize}")
         add("  chunking.overlap = ${result.overlap}")
         add("")
-        add("Текущий статус: extraction готов, этап chunking в работе.")
-    }.joinToString(separator = System.lineSeparator())
-
-    private fun documentLoadText(result: DocumentLoadResult): String = buildList {
-        add("Команда `${result.commandName}` выполнила загрузку документов.")
-        add("")
-        add("Параметры запуска:")
-        add("  inputDir = ${result.inputDir}")
-        add("  strategy = ${result.strategyLabel}")
-        add("  outputDir = ${result.outputDir}")
-        add("")
-        add("Найдено документов: ${result.documents.size}")
-
-        if (result.documents.isEmpty()) {
-            add("Поддерживаемые документы не найдены.")
-        } else {
-            add("Первые документы:")
-            result.documents.take(10).forEach { document ->
-                add("  - [${document.sourceType}] ${document.fileName} -> ${document.filePath}")
-                add("    textLength = ${document.text.length}")
-                add("    preview = ${previewText(document.text)}")
-            }
-        }
+        add("Текущий статус: fixed и structured chunking подключены к preview.")
     }.joinToString(separator = System.lineSeparator())
 
     private fun chunkPreviewText(result: ChunkPreviewResult): String = buildList {
@@ -68,18 +46,38 @@ class DefaultCliOutputFormatter : CliOutputFormatter {
         add("Найдено документов: ${result.documents.size}")
         add("Сформировано чанков: ${result.chunks.size}")
 
+        val byStrategy = result.chunks.groupBy { it.strategy }
+        if (byStrategy.isNotEmpty()) {
+            add("Чанков по стратегиям:")
+            byStrategy.forEach { (strategy, chunks) ->
+                add("  - ${strategy.id}: ${chunks.size}")
+            }
+        }
+
         if (result.chunks.isEmpty()) {
             add("Чанки не сформированы.")
         } else {
             add("Первые чанки:")
-            result.chunks.take(10).forEach { chunk ->
+            result.chunks.take(12).forEach { chunk ->
                 add("  - ${chunk.metadata.chunkId}")
+                add("    strategy = ${chunk.strategy.id}")
                 add("    section = ${chunk.metadata.section}")
                 add("    offsets = ${chunk.metadata.startOffset}..${chunk.metadata.endOffset}")
                 add("    textLength = ${chunk.text.length}")
                 add("    preview = ${previewText(chunk.text)}")
             }
         }
+    }.joinToString(separator = System.lineSeparator())
+
+    private fun documentLoadText(result: DocumentLoadResult): String = buildList {
+        add("Команда `${result.commandName}` выполнила загрузку документов.")
+        add("")
+        add("Параметры запуска:")
+        add("  inputDir = ${result.inputDir}")
+        add("  strategy = ${result.strategyLabel}")
+        add("  outputDir = ${result.outputDir}")
+        add("")
+        add("Найдено документов: ${result.documents.size}")
     }.joinToString(separator = System.lineSeparator())
 
     private fun previewText(text: String): String {

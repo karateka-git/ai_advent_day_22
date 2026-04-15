@@ -36,6 +36,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:3.2.1")
     implementation("io.ktor:ktor-client-content-negotiation:3.2.1")
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.2.1")
+    implementation("org.xerial:sqlite-jdbc:3.50.3.0")
     implementation("org.apache.pdfbox:pdfbox:3.0.3")
     runtimeOnly("org.slf4j:slf4j-simple:2.0.17")
     testImplementation(kotlin("test"))

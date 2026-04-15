@@ -7,6 +7,8 @@ import ru.compadre.indexer.cli.DefaultCliOutputFormatter
 import ru.compadre.indexer.config.AppConfigLoader
 import ru.compadre.indexer.workflow.command.HelpCommand
 import ru.compadre.indexer.workflow.command.WorkflowCommand
+import ru.compadre.indexer.workflow.service.DefaultWorkflowCommandHandler
+import ru.compadre.indexer.workflow.service.WorkflowCommandHandler
 import java.io.FileDescriptor
 import java.io.FileOutputStream
 import java.io.PrintStream
@@ -21,12 +23,14 @@ fun main(args: Array<String>) {
     val config = AppConfigLoader.load()
     val parser: CliCommandParser = DefaultCliCommandParser()
     val formatter: CliOutputFormatter = DefaultCliOutputFormatter()
+    val commandHandler: WorkflowCommandHandler = DefaultWorkflowCommandHandler()
 
     if (args.isEmpty()) {
         runInteractiveShell(
             parser = parser,
             formatter = formatter,
             config = config,
+            commandHandler = commandHandler,
         )
         return
     }
@@ -38,7 +42,7 @@ fun main(args: Array<String>) {
         return
     }
 
-    println(formatter.format(command, config))
+    println(formatter.format(commandHandler.handle(command, config)))
 }
 
 private fun configureUtf8Console() {
@@ -62,6 +66,7 @@ private fun runInteractiveShell(
     parser: CliCommandParser,
     formatter: CliOutputFormatter,
     config: ru.compadre.indexer.config.AppConfig,
+    commandHandler: WorkflowCommandHandler,
 ) {
     println("Local Document Indexer")
     println("Интерактивный режим. Введите `help`, чтобы увидеть доступные команды, или `exit`, чтобы завершить сессию.")
@@ -87,7 +92,7 @@ private fun runInteractiveShell(
             }
 
             "help" -> {
-                println(formatter.format(HelpCommand, config))
+                println(formatter.format(commandHandler.handle(HelpCommand, config)))
                 continue
             }
         }
@@ -97,6 +102,7 @@ private fun runInteractiveShell(
             parser = parser,
             formatter = formatter,
             config = config,
+            commandHandler = commandHandler,
         )
     }
 }
@@ -106,6 +112,7 @@ private fun executeInteractiveCommand(
     parser: CliCommandParser,
     formatter: CliOutputFormatter,
     config: ru.compadre.indexer.config.AppConfig,
+    commandHandler: WorkflowCommandHandler,
 ) {
     val command = try {
         parser.parse(rawInput.split(Regex("\\s+")).toTypedArray())
@@ -114,5 +121,5 @@ private fun executeInteractiveCommand(
         return
     }
 
-    println(formatter.format(command, config))
+    println(formatter.format(commandHandler.handle(command, config)))
 }

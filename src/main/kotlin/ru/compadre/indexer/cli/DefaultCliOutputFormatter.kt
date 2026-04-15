@@ -1,22 +1,19 @@
 package ru.compadre.indexer.cli
 
-import ru.compadre.indexer.config.AppConfig
-import ru.compadre.indexer.workflow.command.CompareCommand
-import ru.compadre.indexer.workflow.command.HelpCommand
-import ru.compadre.indexer.workflow.command.IndexCommand
-import ru.compadre.indexer.workflow.command.WorkflowCommand
+import ru.compadre.indexer.workflow.result.CommandResult
+import ru.compadre.indexer.workflow.result.DocumentLoadResult
+import ru.compadre.indexer.workflow.result.HelpResult
 
 /**
  * Форматтер CLI-вывода для стартового этапа проекта.
  */
 class DefaultCliOutputFormatter : CliOutputFormatter {
-    override fun format(command: WorkflowCommand, config: AppConfig): String = when (command) {
-        HelpCommand -> helpText(config)
-        is IndexCommand -> indexText(command, config)
-        is CompareCommand -> compareText(command, config)
+    override fun format(result: CommandResult): String = when (result) {
+        is HelpResult -> helpText(result)
+        is DocumentLoadResult -> documentLoadText(result)
     }
 
-    private fun helpText(config: AppConfig): String = buildList {
+    private fun helpText(result: HelpResult): String = buildList {
         add("Local Document Indexer")
         add("")
         add("Доступные команды:")
@@ -26,33 +23,33 @@ class DefaultCliOutputFormatter : CliOutputFormatter {
         add("  help")
         add("")
         add("Текущий конфиг:")
-        add("  inputDir = ${config.app.inputDir}")
-        add("  outputDir = ${config.app.outputDir}")
-        add("  ollama.baseUrl = ${config.ollama.baseUrl}")
-        add("  ollama.embeddingModel = ${config.ollama.embeddingModel}")
-        add("  chunking.fixedSize = ${config.chunking.fixedSize}")
-        add("  chunking.overlap = ${config.chunking.overlap}")
+        add("  inputDir = ${result.inputDir}")
+        add("  outputDir = ${result.outputDir}")
+        add("  ollama.baseUrl = ${result.ollamaBaseUrl}")
+        add("  ollama.embeddingModel = ${result.embeddingModel}")
+        add("  chunking.fixedSize = ${result.fixedSize}")
+        add("  chunking.overlap = ${result.overlap}")
         add("")
-        add("Этап 1 готов: каркас CLI и конфиг подключены.")
+        add("Текущий статус: каркас CLI и конфиг подключены, этап загрузки документов активен.")
     }.joinToString(separator = System.lineSeparator())
 
-    private fun indexText(command: IndexCommand, config: AppConfig): String = buildList {
-        add("Команда `index` пока работает как каркас первого этапа.")
-        add("Следующий этап подключит реальное сканирование документов.")
+    private fun documentLoadText(result: DocumentLoadResult): String = buildList {
+        add("Команда `${result.commandName}` выполнила загрузку документов.")
         add("")
         add("Параметры запуска:")
-        add("  inputDir = ${command.inputDir ?: config.app.inputDir}")
-        add("  strategy = ${command.strategy ?: if (command.allStrategies) "all" else "<не указана>"}")
-        add("  outputDir = ${config.app.outputDir}")
-    }.joinToString(separator = System.lineSeparator())
+        add("  inputDir = ${result.inputDir}")
+        add("  strategy = ${result.strategyLabel}")
+        add("  outputDir = ${result.outputDir}")
+        add("")
+        add("Найдено документов: ${result.documents.size}")
 
-    private fun compareText(command: CompareCommand, config: AppConfig): String = buildList {
-        add("Команда `compare` пока работает как каркас первого этапа.")
-        add("Следующий этап подключит реальные метрики chunking.")
-        add("")
-        add("Параметры запуска:")
-        add("  inputDir = ${command.inputDir ?: config.app.inputDir}")
-        add("  outputDir = ${config.app.outputDir}")
+        if (result.documents.isEmpty()) {
+            add("Поддерживаемые документы не найдены.")
+        } else {
+            add("Первые документы:")
+            result.documents.take(10).forEach { document ->
+                add("  - [${document.sourceType}] ${document.fileName} -> ${document.filePath}")
+            }
+        }
     }.joinToString(separator = System.lineSeparator())
 }
-

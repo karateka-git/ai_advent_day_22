@@ -1,15 +1,13 @@
 package ru.compadre.indexer.cli
 
-import ru.compadre.indexer.config.AppConfig
-import ru.compadre.indexer.workflow.command.WorkflowCommand
+import ru.compadre.indexer.workflow.result.CommandResult
 
 /**
  * Контракт пользовательского CLI-вывода.
  */
 interface CliOutputFormatter {
     /**
-     * Форматирует команду и активную конфигурацию в понятный текст для консоли.
+     * Форматирует результат выполнения команды в понятный текст для консоли.
      */
-    fun format(command: WorkflowCommand, config: AppConfig): String
+    fun format(result: CommandResult): String
 }
-

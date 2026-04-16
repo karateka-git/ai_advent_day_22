@@ -76,23 +76,23 @@ class DefaultCliOutputFormatter : CliOutputFormatter {
         add("  report = ${result.reportPath}")
         add("")
         add("Сводка:")
-        add("  documents = ${result.report.documentsCount}")
-        add("  fixed.chunks = ${result.report.fixedMetrics.chunksCount}")
-        add("  fixed.avgLength = ${result.report.fixedMetrics.averageLength.toInt()}")
-        add("  structured.chunks = ${result.report.structuredMetrics.chunksCount}")
-        add("  structured.avgLength = ${result.report.structuredMetrics.averageLength.toInt()}")
+        add("  Количество документов = ${result.report.documentsCount}")
+        add("  Fixed: количество чанков = ${result.report.fixedMetrics.chunksCount}")
+        add("  Fixed: средняя длина = ${result.report.fixedMetrics.averageLength.toInt()}")
+        add("  Structured: количество чанков = ${result.report.structuredMetrics.chunksCount}")
+        add("  Structured: средняя длина = ${result.report.structuredMetrics.averageLength.toInt()}")
         add("")
-        add("Распределение fixed:")
+        add("Распределение длин для fixed:")
         if (result.report.fixedMetrics.lengthBuckets.isEmpty()) {
-            add("  - empty")
+            add("  - пусто")
         } else {
             result.report.fixedMetrics.lengthBuckets.forEach { bucket ->
                 add("  - ${bucket.rangeLabel}: ${bucket.count}")
             }
         }
-        add("Распределение structured:")
+        add("Распределение длин для structured:")
         if (result.report.structuredMetrics.lengthBuckets.isEmpty()) {
-            add("  - empty")
+            add("  - пусто")
         } else {
             result.report.structuredMetrics.lengthBuckets.forEach { bucket ->
                 add("  - ${bucket.rangeLabel}: ${bucket.count}")

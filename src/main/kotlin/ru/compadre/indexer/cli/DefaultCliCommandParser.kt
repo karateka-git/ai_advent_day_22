@@ -60,15 +60,32 @@ class DefaultCliCommandParser : CliCommandParser {
     private fun parseAskCommand(args: Array<String>): WorkflowCommand {
         val query = findOption(args, "--query")
             ?: throw IllegalArgumentException("Для команды `ask` требуется опция `--query`.")
-        val mode = findOption(args, "--mode") ?: DEFAULT_ASK_MODE
+        val mode = (findOption(args, "--mode") ?: DEFAULT_ASK_MODE).lowercase()
+        val strategy = findOption(args, "--strategy")?.let { rawValue ->
+            ChunkingStrategy.fromCli(rawValue)
+                ?: throw IllegalArgumentException(
+                    "Для `ask --strategy` поддерживаются только значения `fixed` и `structured`.",
+                )
+        }
+        val topK = findIntOption(args, "--top")
 
-        if (mode.lowercase() != DEFAULT_ASK_MODE) {
-            throw IllegalArgumentException("На текущем этапе для `ask --mode` поддерживается только значение `plain`.")
+        if (mode !in SUPPORTED_ASK_MODES) {
+            throw IllegalArgumentException("Для `ask --mode` поддерживаются только значения `plain` и `rag`.")
+        }
+
+        if (mode == "plain" && strategy != null) {
+            throw IllegalArgumentException("Параметр `--strategy` можно использовать только вместе с `ask --mode rag`.")
+        }
+
+        if (mode == "plain" && topK != null) {
+            throw IllegalArgumentException("Параметр `--top` можно использовать только вместе с `ask --mode rag`.")
         }
 
         return AskCommand(
             query = query,
-            mode = mode.lowercase(),
+            mode = mode,
+            strategy = strategy,
+            topK = topK,
         )
     }
 
@@ -104,7 +121,14 @@ class DefaultCliCommandParser : CliCommandParser {
             ?: throw IllegalArgumentException("Для опции `$optionName` требуется значение.")
     }
 
+    private fun findIntOption(args: Array<String>, optionName: String): Int? {
+        val value = findOption(args, optionName) ?: return null
+        return value.toIntOrNull()
+            ?: throw IllegalArgumentException("Для опции `$optionName` требуется целое число.")
+    }
+
     private companion object {
         private const val DEFAULT_ASK_MODE = "plain"
+        private val SUPPORTED_ASK_MODES = setOf("plain", "rag")
     }
 }
